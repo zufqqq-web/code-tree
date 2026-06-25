@@ -1,0 +1,78 @@
+Metadata-Version: 2.4
+Name: codetree
+Version: 0.1.0
+Summary: A smart tree CLI tool that provides structural code understanding and analysis.
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+
+# CodeTree 🌳
+
+A smart Python CLI tool that functions like the traditional `tree` command, but with deep codebase understanding. It analyzes file structure, determines framework dependencies, tracks programming language usage by lines of code, and leverages local LLMs (via LM Studio or any OpenAI-compatible API) to generate semantic, high-level summaries of your important source files.
+
+## Features
+
+- **Project Structure Tree:** Renders a clean tree visualization with aligned one-line summaries for each file.
+- **Priority Scoring:** Uses a composite score based on lines of code, class/function counts, import references, and file tags to decide which modules warrant full LLM descriptions.
+- **Language Statistics:** Calculates codebase composition by lines of code (not bytes) with optional config/manifest exclusions.
+- **Framework Detection:** Identifies frameworks/libraries via package manifests (`package.json`, `requirements.txt`, etc.) combined with file markers.
+- **Zero-Dependency LLM Client:** Communicates with LM Studio or other APIs using standard library `urllib` to eliminate third-party package issues.
+- **Batch Processing:** Groups similar files (e.g. UI components) into single batch queries to save tokens and execution time.
+- **Gitignore Integration:** Supports recursive `.gitignore` rule parsing to automatically skip dependency folders and ignored paths.
+
+---
+
+## Installation
+
+No external dependencies are required! Simply install the package locally:
+
+```bash
+pip install -e .
+```
+
+---
+
+## Usage
+
+### Basic Scan (with Local LLM)
+Run the tool on your project folder (requires LM Studio or a compatible server running on port `1234`):
+
+```bash
+codetree --dir . --output my_project_report.md
+```
+
+### Run Offline (Heuristics Only)
+If you don't have a local LLM running, you can run the tool in offline mode. It will build the structure, stats, frameworks, and apply pre-defined heuristic descriptions:
+
+```bash
+codetree --dir . --output report.md --no-llm
+```
+
+### CLI Options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--dir`, `-d` | `.` | Target project directory to analyze |
+| `--output`, `-o` | `codetree_report.md` | Save path for the generated report |
+| `--threshold`, `-t` | `15.0` | Importance score threshold for detailed LLM analysis |
+| `--api-url` | `http://localhost:1234/v1` | OpenAI-compatible base URL |
+| `--api-key` | `lm-studio` | Authorization API key |
+| `--model` | `local-model` | Target model name |
+| `--exclude-configs` | `False` | Exclude configurations and manifests from language stats |
+| `--no-llm` | `False` | Run offline and bypass all LLM requests |
+
+---
+
+## Codebase Architecture
+
+- **`codetree/scanner.py`:** Recursively walks directories, parses `.gitignore` rules, and calculates code lines and declaration counts.
+- **`codetree/languages.py`:** Computes lines-of-code statistics per programming language.
+- **`codetree/frameworks.py`:** Detects libraries and frameworks from dependencies and markers.
+- **`codetree/skeleton.py`:** Extracts structural "skeletons" (signatures/docstrings/comments) for Python (AST) and JS/TS (braces balancing).
+- **`codetree/prioritization.py`:** Builds import reference graph, scores files, classifies roles, and groups files for batching.
+- **`codetree/llm_client.py`:** Handles network requests and parses JSON with robust fallback chains.
+- **`codetree/reporter.py`:** Renders the final Markdown tree and section distributions.
+- **`codetree/cli.py`:** Command Line interface orchestrator.

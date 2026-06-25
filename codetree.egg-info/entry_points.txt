@@ -1,0 +1,2 @@
+[console_scripts]
+codetree = codetree.cli:main
